@@ -1,13 +1,15 @@
-from OpenGL.GL import   glDrawArrays,			  \
-						GL_TRIANGLES,			  \
-						glVertexAttribPointer,	 \
-						glEnableVertexAttribArray, \
-						glDisableVertexAttribArray,\
-						glGetAttribLocation,	   \
-						GL_FLOAT,				  \
-						shaders,                  \
-						glGetUniformLocation,     \
-						glUniform2f
+from OpenGL.GL import   glDrawArrays,			      \
+						GL_TRIANGLES,			      \
+						glVertexAttribPointer,	      \
+						glEnableVertexAttribArray,    \
+						glDisableVertexAttribArray,   \
+						glGetAttribLocation,	      \
+						GL_FLOAT,				      \
+						shaders,                      \
+						glGetUniformLocation,         \
+						glUniform3f,                  \
+						glUniformMatrix4fv,           \
+						GL_FALSE         
 						
 						
 from OpenGL.arrays import vbo   
@@ -107,6 +109,7 @@ class Actor(object):
 			self.updateVBO()
 			
 		shader = frameInfo.shader
+		pMatrix = frameInfo.projection_matrix
 			
 		# Load our shader
 		shaders.glUseProgram(shader)
@@ -115,32 +118,36 @@ class Actor(object):
 		try:
 			
 			# Get our shader entry points
-			self.position_location = glGetAttribLocation(shader, 'position')
-			self.color_location = glGetAttribLocation(shader, 'color')
-			self.position_offset_location = glGetUniformLocation(shader, "offset");
-			
+			positionAttrib          = glGetAttribLocation(shader, 'position')
+			colorAttrib             = glGetAttribLocation(shader, 'color')
+			offsetUniform           = glGetUniformLocation(shader, 'offset');
+			projectionMatrixUniform = glGetUniformLocation(shader, 'projectionMatrix');
+						
 			# Enable any vertex attribute arrays
-			glEnableVertexAttribArray(self.position_location)
-			glEnableVertexAttribArray(self.color_location)
+			glEnableVertexAttribArray(positionAttrib)
+			glEnableVertexAttribArray(colorAttrib)
 			
 			# colorOffset is sizeof float (4) * floats per point (4) * num of points (vbo/2)
 			colorOffset = 4 * 4 * (len(self.vbo) / 2) 
 						
 			# Set the Attribute pointers			
-			glVertexAttribPointer(self.position_location, 4, GL_FLOAT, False, 0, self.vbo)
-			glVertexAttribPointer(self.color_location, 4, GL_FLOAT, False, 0, self.vbo + colorOffset)
+			glVertexAttribPointer(positionAttrib, 4, GL_FLOAT, False, 0, self.vbo)
+			glVertexAttribPointer(colorAttrib,    4, GL_FLOAT, False, 0, self.vbo + colorOffset)
 			
-			# Compute object offset and apply to uniform
-			xOffsetX, yOffset = self.computePositionOffsets(frameInfo.stage.getElapsedTime())
-			glUniform2f(self.position_offset_location, xOffsetX, yOffset)
+			# Compute position  offset 
+			xOffsetX, yOffset, zOffset = self.computePositionOffsets(frameInfo.stage.getElapsedTime())
+			
+			# Apply uniforms
+			glUniform3f(offsetUniform, xOffsetX, yOffset, zOffset)
+			glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, pMatrix);
 			
 			glDrawArrays(GL_TRIANGLES, 0, len(self.vbo) / 2)
 			
-			glDisableVertexAttribArray(self.position_location)
-			glDisableVertexAttribArray(self.color_location)
+			glDisableVertexAttribArray(positionAttrib)
+			glDisableVertexAttribArray(colorAttrib)
+			
 		finally:
 			self.vbo.unbind()
-			#glDisableClientState(GL_VERTEX_ARRAY)
 		
 		# Unload our shader
 		shaders.glUseProgram(0)
@@ -155,7 +162,8 @@ class Actor(object):
 		
 		currTimeThroughLoop = float(elapsedTime) % loopDuration
 		
-		xOffset = cos(currTimeThroughLoop * scale) * 0.5;
-		yOffset = sin(currTimeThroughLoop * scale) * 0.5;
+		xOffset = cos(currTimeThroughLoop * scale) * 100.0;
+		yOffset = sin(currTimeThroughLoop * scale) * 100.0;
+		zOffset = 0
 		
-		return xOffset, yOffset
+		return xOffset, yOffset, zOffset

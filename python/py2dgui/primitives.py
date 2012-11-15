@@ -14,9 +14,9 @@ class Triangle(Actor):
 		# Set default points
 		else:
 			points = [
-						Point(0.0, 0.5, 0.0),
-						Point(0.5, -0.366, 0.0),
-						Point(-0.5, -0.366, 0.0),
+						Point(0.0, 50.0, -1.0),
+						Point(-50.0, -36.6, -1.0),
+						Point(50.0, -36.6, -1.0)
 					]
 			
 		# Create the triangle
@@ -34,10 +34,10 @@ class Square(Actor):
 		# Set default points
 		else:
 			points = [
-						Point(-0.5, 0.5, 0.0),
-						Point(0.5, 0.5, 0.0),
-						Point(0.5, -0.5, 0.0),
-						Point(-0.5, -0.5, 0.0),
+						Point(-100.0, 100.0, -1.0),
+						Point(100.0, 100.0, -1.0),
+						Point(100.0, -100.0, -1.0),
+						Point(-100.0, -100.0, -1.0),
 					]
 		
 		

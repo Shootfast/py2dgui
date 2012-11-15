@@ -6,15 +6,19 @@ vertex = """
 layout (location = 0) in vec4 position;
 layout (location = 1) in vec4 color;
 
-uniform vec2 offset;
-
 smooth out vec4 theColor;
+
+uniform vec3 offset;
+uniform mat4 projectionMatrix;
+
 
 void main()
 {
 	// Apply the position offset
-	vec4 totalOffset = vec4(offset.x, offset.y, 0.0, 0.0);
-	gl_Position = position + totalOffset;
+	vec4 cameraPosition = position + vec4(offset.x, offset.y, offset.z, 0.0);
+	
+	// Then apply the projection Matrix
+	gl_Position = projectionMatrix * cameraPosition;
 	
 	// Pass on the color value
 	theColor = color;
@@ -26,8 +30,8 @@ fragment = """
 #version 330
 
 smooth in vec4 theColor;
-out vec4 outputColor;
 
+out vec4 outputColor;
 
 void main()
 {

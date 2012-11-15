@@ -65,7 +65,7 @@ if __name__ == "__main__":
 	shape = Triangle(colors=colors)
 	
 	# Make a square
-	shape = Square(colors=colors)
+	#shape = Square(colors=colors)
 	
 	# Add it to the stage
 	stage.add_actor(shape)
