@@ -5,11 +5,9 @@ from OpenGL.GL import   glDrawArrays,			      \
 						glDisableVertexAttribArray,   \
 						glGetAttribLocation,	      \
 						GL_FLOAT,				      \
-						shaders,                      \
 						glGetUniformLocation,         \
-						glUniform3f,                  \
 						glUniformMatrix4fv,           \
-						GL_FALSE         
+						GL_TRUE
 						
 						
 from OpenGL.arrays import vbo   
@@ -23,14 +21,24 @@ from math import sin, cos
 class Actor(object):
 	def __init__(self, points, colors=[], color=Color(0.5, 0.5, 0.5, 1.0)):
 		
-		self.points = points
-		self.colors = colors
+		# list of points
+		self._points = points
+		# list of colors
+		self._colors = colors
 				
 		# Default color
 		self.default_color = color
 		
 		# Is the VBO ready to render with current data
 		self.ready = False
+		
+		self._translation = Point()
+		self._rotation = Point()		
+		self._scale = Point(1,1,1)
+		
+		# Child actors
+		self.children = []
+		
 	
 	@property
 	def points(self):
@@ -63,7 +71,33 @@ class Actor(object):
 		self.ready = False
 		
 		
-	def updateVBO(self):
+	def translate(self, value):
+		self._translation += value
+		
+	def getTranslation(self):
+		return self._translation
+		
+	def rotate(self, value):
+		self._rotation += value
+		
+	def getRotation(self):
+		return self._rotation
+	
+	def scale(self, value):
+		self._scale += value
+	
+	def getScale(self):
+		return self._scale
+		
+	def addChild(self, child):
+		self.children.append(child)
+		
+	def removeChild(self, child):
+		if child in self.children:
+			self.children.remove(child)
+			
+		
+	def _updateVBO(self):
 		'''
 		Update the data in the VBO for this object
 		'''
@@ -100,28 +134,36 @@ class Actor(object):
 	
 	
 	
-	def render(self, frameInfo):
+	def _render(self, stage, matrixstack):
 		'''
 		Render this Actor (to be called by stage!)
 		'''
 		# Check if this object has been setup yet
 		if not self.ready:
-			self.updateVBO()
-			
-		shader = frameInfo.shader
-		pMatrix = frameInfo.projection_matrix
-			
-		# Load our shader
-		shaders.glUseProgram(shader)
+			self._updateVBO()
+				
+		# Push the current state of the matrix stack before we start changing things
+		matrixstack.push()
 		
+		# Apply transformations
+		matrixstack.translate(self.getTranslation())
+		matrixstack.rotatex(self.getRotation().x)
+		matrixstack.rotatey(self.getRotation().y)
+		matrixstack.rotatez(self.getRotation().z)
+		matrixstack.scale(self.getScale())	
+		
+		
+		# Calculate the camera2model matrix for this actor
+		modelCameraMatrix = matrixstack.top()
+			
+		# Render ourselves
 		self.vbo.bind()
 		try:
 			
 			# Get our shader entry points
-			positionAttrib          = glGetAttribLocation(shader, 'position')
-			colorAttrib             = glGetAttribLocation(shader, 'color')
-			offsetUniform           = glGetUniformLocation(shader, 'offset');
-			projectionMatrixUniform = glGetUniformLocation(shader, 'projectionMatrix');
+			positionAttrib           = glGetAttribLocation(stage.shader, 'position')
+			colorAttrib              = glGetAttribLocation(stage.shader, 'color')
+			modelCameraMatrixUniform = glGetUniformLocation(stage.shader, 'modelToCameraMatrix');
 						
 			# Enable any vertex attribute arrays
 			glEnableVertexAttribArray(positionAttrib)
@@ -133,13 +175,9 @@ class Actor(object):
 			# Set the Attribute pointers			
 			glVertexAttribPointer(positionAttrib, 4, GL_FLOAT, False, 0, self.vbo)
 			glVertexAttribPointer(colorAttrib,    4, GL_FLOAT, False, 0, self.vbo + colorOffset)
-			
-			# Compute position  offset 
-			xOffsetX, yOffset, zOffset = self.computePositionOffsets(frameInfo.stage.getElapsedTime())
-			
+						
 			# Apply uniforms
-			glUniform3f(offsetUniform, xOffsetX, yOffset, zOffset)
-			glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, pMatrix);
+			glUniformMatrix4fv(modelCameraMatrixUniform, 1, GL_TRUE, modelCameraMatrix);
 			
 			glDrawArrays(GL_TRIANGLES, 0, len(self.vbo) / 2)
 			
@@ -148,9 +186,16 @@ class Actor(object):
 			
 		finally:
 			self.vbo.unbind()
-		
-		# Unload our shader
-		shaders.glUseProgram(0)
+			
+			
+		# Then render our children
+		for child in self.children:
+			child._render(stage, matrixstack)
+
+			
+		# Pop the matrix stack back to what it was
+		matrixstack.pop()
+		pass
 
 
 	def computePositionOffsets(self, elapsedTime):
