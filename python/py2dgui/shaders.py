@@ -8,14 +8,14 @@ layout (location = 1) in vec4 color;
 
 smooth out vec4 theColor;
 
-uniform vec3 offset;
 uniform mat4 projectionMatrix;
+uniform mat4 modelToCameraMatrix;
 
 
 void main()
 {
-	// Apply the position offset
-	vec4 cameraPosition = position + vec4(offset.x, offset.y, offset.z, 0.0);
+	// Apply the model to camera matrix
+	vec4 cameraPosition = modelToCameraMatrix * position;
 	
 	// Then apply the projection Matrix
 	gl_Position = projectionMatrix * cameraPosition;
