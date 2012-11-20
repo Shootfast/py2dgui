@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('./python')
-from py2dgui import Stage, Triangle, Square, Color
+from py2dgui import Stage, Triangle, Square, Color, Point, BorderedSquare
 
-from OpenGL.GL import glClearColor, glClear, GL_COLOR_BUFFER_BIT
+from OpenGL.GL import glClearColor, glClear, GL_COLOR_BUFFER_BIT, glViewport
 from OpenGL import GLUT	
 
 from time import time
+	 
 	 
 	 
 class MyStage(Stage):
@@ -17,7 +18,7 @@ class MyStage(Stage):
 		super(MyStage, self).__init__(width, height)
 		
 		# Record when we last printed FPS
-		self.lastPrinted = time()
+		#self.lastPrinted = time()
 	
 	def render(self):
 		'''
@@ -35,11 +36,13 @@ class MyStage(Stage):
 		
 		# Print FPS every 5 seconds
 		now = time()
-		if now - self.lastPrinted > 5:
-			self.lastPrinted = now
-			print "FPS: %s" % self.fps
+		#if now - self.lastPrinted > 5:
+			#self.lastPrinted = now
+			#print "FPS: %s" % self.fps
 		
-	  
+	def resize(self, w, h):
+		glViewport(0,0,w,h)
+		super(MyStage, self).resize(w,h)
 	  
 	  
 if __name__ == "__main__":
@@ -56,19 +59,27 @@ if __name__ == "__main__":
 	
 	GLUT.glutDisplayFunc(stage.render)
 	GLUT.glutIdleFunc(stage.render)
+	GLUT.glutReshapeFunc(stage.resize)
 	
 	
-	# Colors for shape (one color per point)
-	colors = [Color(r=1.0), Color(g=1.0), Color(b=1.0)]
+	# Make a shape
+	shape = BorderedSquare(color=Color(0.3, 0.3, 0.3), border_width=2)
+	#shape.trans
+	#shape.rotate(Point(z=15))
+	shape.translate(Point(320, 240))
+	shape.scale(Point(.2,.8,.2))
+	shape.rotate(Point(z=15))
 	
-	# Make a triangle
-	shape = Triangle(colors=colors)
 	
-	# Make a square
-	#shape = Square(colors=colors)
+	# Make a red square
+	shape2 = Square(color=Color(1.0))
+	shape2.scale(Point(-.5, -.5, -.5))
+	shape2.translate(Point(0,25))
+	shape.addChild(shape2)
 	
 	# Add it to the stage
 	stage.add_actor(shape)
+	#stage.add_actor(shape2)
 
 	# Enter the main loop
 	GLUT.glutMainLoop()
