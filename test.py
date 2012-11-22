@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('./python')
-from py2dgui import Stage, Triangle, Square, Color, Point, BorderedSquare, TextActor
+from py2dgui import *
 
 from OpenGL.GL import glClearColor, glClear, GL_COLOR_BUFFER_BIT, glViewport
 from OpenGL import GLUT	
@@ -81,7 +81,11 @@ if __name__ == "__main__":
 
 	text = TextActor('./fonts/LiberationSerif-Regular.ttf', 48, text="Hello World!")
 	text.translate(Point(10,100))
-	stage.add_actor(text)
+	stage.addActor(text)
+	
+	#image = ImageActor('./Pictures/success_kid.png', alpha=.5)
+	#image.translate(Point(10,10))
+	#stage.addActor(image)
 
 	# Enter the main loop
 	GLUT.glutMainLoop()
