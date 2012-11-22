@@ -2,6 +2,7 @@ import numpy
 import math
 import copy
 
+
 class Point(object):
 	def __init__(self, x=0.0, y=0.0, z=0.0, w=1.0):
 		self.data = numpy.array([x,y,z,w],'f')	
@@ -41,6 +42,7 @@ class Color(Point):
 	g = property(lambda self: self.y, lambda self, value: setattr(self,'y',value))
 	b = property(lambda self: self.z, lambda self, value: setattr(self,'z',value))
 	a = property(lambda self: self.w, lambda self, value: setattr(self,'w',value))
+	
 	
 	
 class MatrixStack(object):
@@ -129,5 +131,4 @@ class MatrixStack(object):
 		
 	def pop(self):
 		self.current = self.stack.pop(0)
-
 
