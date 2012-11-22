@@ -10,9 +10,12 @@ from OpenGL.GL import   shaders,                      \
 						glUniformMatrix4fv,           \
 						glUniform4fv,                 \
 						glUniform1i,                  \
+						glUniform2f,                  \
+						glUniform1f,                  \
 						GL_TRUE,                      \
 						glBindTexture,                \
 						GL_TEXTURE_2D
+						
 
 
 
@@ -184,7 +187,6 @@ uniform vec4 color;
 void main() 
 {
   gl_FragColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * color;
-  //gl_FragColor = color;
 }
 """
 	# Constructor
@@ -235,4 +237,102 @@ void main()
 		shaders.glUseProgram(0)
 		
 		
-shaderlist = [PrimitiveShader, TextShader]
+		
+class ImageShader(BaseShader):
+	'''
+	A shader for ImageActors
+	'''
+	# Shader name (should match actorname attribute of actor instance)
+	name = 'image'
+	
+	# Vertex shader for ImageActor
+	imageVertex = """
+#version 330
+
+layout (location = 0) in vec4 position;
+uniform mat4 modelToCameraMatrix;
+uniform mat4 projectionMatrix;
+
+out vec2 texpos;
+
+void main()
+{ 	
+	 //Split the position vec4 into its 2 parts
+	 vec4 p = vec4(position.xy,0,1);
+
+	
+	// Apply the model to camera matrix
+	vec4 cameraPosition = modelToCameraMatrix * p;
+	
+	// Then apply the projection Matrix
+	gl_Position = projectionMatrix * cameraPosition;
+	
+	texpos = position.zw; 
+	
+	
+}
+"""
+	# Fragment shader for ImageActor
+	imageFragment = """
+#version 330
+
+uniform sampler2D tex;
+in vec2 texpos;
+
+uniform float alpha;
+
+out vec4 outputColor;
+
+void main()
+{
+	vec4 col = texture2D(tex, texpos);
+	outputColor = vec4(col.xyz, alpha);
+}
+"""
+
+	# Constructor
+	def __init__(self):
+		super(ImageShader, self).__init__(ImageShader.imageVertex, ImageShader.imageFragment)
+		
+		# Get our shader entry points
+		self.attrib_position           = glGetAttribLocation(self.program, 'position')
+		self.uniform_modelCamera       = glGetUniformLocation(self.program, 'modelToCameraMatrix')
+		self.uniform_projection        = glGetUniformLocation(self.program, 'projectionMatrix')
+		self.uniform_alpha             = glGetUniformLocation(self.program, 'alpha')
+		
+		
+	def setup(self, actor):
+		'''
+		Setup the shader uniforms / attributes.
+		Assumes actor.vbo is already bound
+		'''
+		# Bind the shader
+		shaders.glUseProgram(self.program)
+
+		# Enable vertex attribute arrays
+		glEnableVertexAttribArray(self.attrib_position)
+			
+		# Set the Attribute pointers			
+		glVertexAttribPointer(self.attrib_position, 4, GL_FLOAT, False, 0, actor.vbo)
+
+		# Apply uniforms
+		glUniformMatrix4fv(self.uniform_modelCamera, 1, GL_TRUE, actor.modelCamera_matrix)
+		glUniformMatrix4fv(self.uniform_projection, 1, GL_TRUE, actor.projection_matrix)
+		glUniform1f(self.uniform_alpha, actor.alpha)
+		
+		# Bind to the correct texture
+		glBindTexture(GL_TEXTURE_2D, actor.texid)
+		
+		
+	def cleanup(self):
+		'''
+		Cleans up after the shader has been used
+		'''
+		glDisableVertexAttribArray(self.attrib_position)
+		
+		# Unbind the shader
+		shaders.glUseProgram(0)
+
+		
+		
+shaderlist = [PrimitiveShader, TextShader, ImageShader]
