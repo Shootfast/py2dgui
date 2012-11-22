@@ -93,15 +93,21 @@ class Stage(object):
 										],'f')
 		
 		
-	def add_actor(self, actor):
+	def addActor(self, actor):
 		'''
 		Add an actor to the stage
 		'''
 		if actor not in self.actors:
 			self.actors.append(actor)
 			
+	def removeActor(self, actor):
+		'''
+		Remove an actor from the stage
+		'''
+		if actor in self.actors:
+			self.actors.remove(actor)
 			
-	def clear_stage(self):
+	def clearStage(self):
 		'''
 		Remove all actors from the stage
 		'''
@@ -122,7 +128,10 @@ class Stage(object):
 		
 		# record the framerate
 		framerate = after - before
-		self.fps = 1.0 / framerate 
+		if framerate > 0:
+			self.fps = 1.0 / framerate
+		else:
+			self.fps = 0 
 		
 		# Record frame finish time
 		self.frameFinishTime = after
