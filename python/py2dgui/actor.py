@@ -1,13 +1,32 @@
 from OpenGL.GL import   glDrawArrays,			      \
 						glBufferData,                 \
+						glBindTexture,                \
+						glTexImage2D,                 \
+						glPixelStorei,                \
+						glTexParameteri,              \
+						glActiveTexture,              \
+						glGenTextures,                \
+						GL_TEXTURE0,                  \
 						GL_TRIANGLES,		          \
-						GL_ARRAY_BUFFER
+						GL_ARRAY_BUFFER,              \
+						GL_TEXTURE_2D,                \
+       					GL_UNPACK_ALIGNMENT,          \
+       					GL_UNSIGNED_BYTE,             \
+       					GL_TEXTURE_MIN_FILTER,        \
+       					GL_TEXTURE_MAG_FILTER,        \
+       					GL_LINEAR,                    \
+       					GL_RGB,                       \
+       					GL_RGBA
+				
 									
 from OpenGL.arrays import vbo   
 from numpy import array
 
+import Image
+
 from py2dgui.base import Point, Color
 from py2dgui.atlas import Atlas
+#from OpenGL.raw.GL.annotations import glGenTextures
 
 
 
@@ -231,7 +250,43 @@ class PrimitiveActor(BaseActor):
 		# Post render
 		super(PrimitiveActor, self)._postrender(stage, shader)
 		
-	
+
+
+
+class Group(BaseActor):
+	'''
+	Actor for groups of other actors
+	'''	
+	actortype = 'group'
+
+	def _render(self, stage, projection_matrix, modelCamera_matrix):
+		
+		# Set the modelCamera_matrix
+		self.matrixStack = modelCamera_matrix 
+		self.matrixStack.push()
+		
+		# Apply transformations
+		self.matrixStack.translate(self.getTranslation())
+		self.matrixStack.rotatex(self.getRotation().x)
+		self.matrixStack.rotatey(self.getRotation().y)
+		self.matrixStack.rotatez(self.getRotation().z)
+		self.matrixStack.scale(self.getScale())	
+		
+		# Calculate the camera2model matrix for this actor
+		self.modelCamera_matrix = self.matrixStack.top()
+		
+		# Assign the projection matrix
+		self.projection_matrix = projection_matrix
+		
+		# Render children
+		for child in self.children:
+			child._render(stage, self.projection_matrix, self.matrixStack)
+			
+		# Pop the matrix stack back to what it was
+		self.matrixStack.pop()
+
+		
+
 	
 class TextActor(BaseActor):
 	'''
@@ -239,7 +294,7 @@ class TextActor(BaseActor):
 	'''
 	# Actortype (used to determine shader)
 	actortype = 'text'
-
+	
 	
 	def __init__(self, fontfile, size, text="", color=Color(1, 1, 1, 1)):
 		super(TextActor, self).__init__()
@@ -304,7 +359,6 @@ class TextActor(BaseActor):
 		# Run the pre-render
 		shader = super(TextActor, self)._prerender(stage, projection_matrix, modelCamera_matrix)
 		
-		
 		# Update the values in the VBO
 		a = self._getVertexData()
 		self.vbo.set_array(array(a, 'f'))
@@ -315,4 +369,68 @@ class TextActor(BaseActor):
 		# Post render
 		super(TextActor, self)._postrender(stage, shader)
 
+		
+class ImageActor(BaseActor):
+	'''
+	Actor for image billboards
+	'''
+	# Actortype (used to determine shader)
+	actortype = 'image'
+	
+	def __init__(self, imagefile, points=[], alpha=1.0):
+		super(ImageActor, self).__init__()
+		
+		im = Image.open(imagefile)
+		# Try to open the image file
+		try:
+			ix, iy, image = im.size[0], im.size[1], im.tostring("raw", "RGBA", 0, -1)
+		except SystemError:
+			ix, iy, image = im.size[0], im.size[1], im.tostring("raw", "RGBX", 0, -1)
+		
+		# get a texture buffer	
+		glActiveTexture(GL_TEXTURE0) 
+		self.texid = glGenTextures(1)
+		# Bind the texture
+		glBindTexture(GL_TEXTURE_2D, self.texid)
+		glPixelStorei(GL_UNPACK_ALIGNMENT,1)
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+		
+		# Upload the image
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
+		
+		# Generate the points for the billboard
+		if points == []:
+			points = [Point(0,iy), Point(ix,iy), Point(ix,0), Point(0,0)]
+		if len(points) != 4:
+			raise Exception("Image needs 4 points, %d provided" % len(points))
+		
+		# Generate the UV map
+		uv = [Point(0,1), Point(1,1), Point(1,0), Point(0,0)]
+		
+		a = []
+		for i in [0,1,2,0,2,3]:
+			point = points[i]
+			tex = uv[i]
+			a.extend([point.x, point.y, tex.x, tex.y])
+		
+		# Assign the VBO
+		super(ImageActor, self)._assignVBO(a)
+		
+		self.alpha = float(alpha)
+		
+	
+	
+	def _render(self, stage, projection_matrix, modelCamera_matrix):
+		# Run the pre-render
+		shader = super(ImageActor, self)._prerender(stage, projection_matrix, modelCamera_matrix)
+		
+		# Render
+		glDrawArrays(GL_TRIANGLES, 0, len(self.vbo) / 2)
+		
+		# Post render
+		super(ImageActor, self)._postrender(stage, shader)
+
+		
 		
