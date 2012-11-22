@@ -1,9 +1,9 @@
-from py2dgui.actor import Actor
+from py2dgui.actor import PrimitiveActor
 from py2dgui.base import Point, Color
 
 
 
-class Triangle(Actor):
+class Triangle(PrimitiveActor):
 	def __init__(self, points=[], colors=[], *args, **kwargs):
 		
 		# Check points
@@ -24,7 +24,7 @@ class Triangle(Actor):
 	
 
 
-class Square(Actor):
+class Square(PrimitiveActor):
 	def __init__(self, points=[], colors=[], *args, **kwargs):
 		
 		# Check points
@@ -61,7 +61,7 @@ class Square(Actor):
 
 
 
-class BorderedSquare(Actor):
+class BorderedSquare(PrimitiveActor):
 	def __init__(self, border_color=None, border_width=1, points=[], colors=[], *args, **kwargs):
 		
 		# Check points
