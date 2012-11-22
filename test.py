@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 sys.path.append('./python')
-from py2dgui import Stage, Triangle, Square, Color, Point, BorderedSquare
+from py2dgui import Stage, Triangle, Square, Color, Point, BorderedSquare, TextActor
 
 from OpenGL.GL import glClearColor, glClear, GL_COLOR_BUFFER_BIT, glViewport
 from OpenGL import GLUT	
@@ -25,7 +25,7 @@ class MyStage(Stage):
 		Render the geometry for the scene
 		'''
 		# Clear the buffer
-		glClearColor(0.0, 0.0, 0.0, 0.0)
+		glClearColor(0, 0, 0, 1)
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		# render the stage
@@ -58,28 +58,30 @@ if __name__ == "__main__":
 	stage = MyStage(width, height)
 	
 	GLUT.glutDisplayFunc(stage.render)
-	GLUT.glutIdleFunc(stage.render)
+	#GLUT.glutIdleFunc(stage.render)
 	GLUT.glutReshapeFunc(stage.resize)
 	
 	
 	# Make a shape
-	shape = BorderedSquare(color=Color(0.3, 0.3, 0.3), border_width=2)
-	#shape.trans
+	#shape = BorderedSquare(color=Color(0.3, 0.3, 0.3), border_width=2)
+	#shape.translate(Point(320, 240))
+	#shape.scale(Point(.2,.8,.2))
 	#shape.rotate(Point(z=15))
-	shape.translate(Point(320, 240))
-	shape.scale(Point(.2,.8,.2))
-	shape.rotate(Point(z=15))
 	
 	
 	# Make a red square
-	shape2 = Square(color=Color(1.0))
-	shape2.scale(Point(-.5, -.5, -.5))
-	shape2.translate(Point(0,25))
-	shape.addChild(shape2)
+	#shape2 = Square(color=Color(1.0))
+	#shape2.scale(Point(-.5, -.5, -.5))
+	#shape2.translate(Point(0,25))
+	#shape.addChild(shape2)
 	
 	# Add it to the stage
-	stage.add_actor(shape)
+	#stage.add_actor(shape)
 	#stage.add_actor(shape2)
+
+	text = TextActor('./fonts/LiberationSerif-Regular.ttf', 48, text="Hello World!")
+	text.translate(Point(10,100))
+	stage.add_actor(text)
 
 	# Enter the main loop
 	GLUT.glutMainLoop()
