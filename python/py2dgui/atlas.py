@@ -11,6 +11,7 @@ from OpenGL.GL import 	glActiveTexture,          \
 						 glTexImage2D,            \
 						 glTexSubImage2D,         \
 						 glPixelStorei,           \
+						 glDeleteTextures,        \
 						 GL_UNPACK_ALIGNMENT,     \
 						 glTexParameteri,         \
 						 GL_TEXTURE_WRAP_S,       \
@@ -124,4 +125,5 @@ class Atlas(object):
 			rowh = max(rowh, bitmap.rows)
 			ox += bitmap.width + 1
 
-		
+	def __del__(self):
+		glDeleteTextures([self.texid])
