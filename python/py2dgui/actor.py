@@ -6,6 +6,7 @@ from OpenGL.GL import   glDrawArrays,			      \
 						glTexParameteri,              \
 						glActiveTexture,              \
 						glGenTextures,                \
+						glDeleteTextures,             \
 						GL_TEXTURE0,                  \
 						GL_TRIANGLES,		          \
 						GL_ARRAY_BUFFER,              \
@@ -326,6 +327,14 @@ class TextActor(BaseActor):
 				
 		coords = []
 		for p in self.text:
+			if p == '\n':
+				y -= a.size
+				x = 0
+				continue
+			
+			if p not in a.c:
+				p = '!'
+				
 			# Get char positions from charinfo
 			x2 = float(x) +  a.c[p].bl
 			y2 = float(-y) - a.c[p].bt
@@ -402,7 +411,7 @@ class ImageActor(BaseActor):
 		
 		# Generate the points for the billboard
 		if points == []:
-			points = [Point(0,iy), Point(ix,iy), Point(ix,0), Point(0,0)]
+			points = [Point(0,0), Point(ix,0), Point(ix,-iy), Point(0,-iy)]
 		if len(points) != 4:
 			raise Exception("Image needs 4 points, %d provided" % len(points))
 		
@@ -432,5 +441,7 @@ class ImageActor(BaseActor):
 		# Post render
 		super(ImageActor, self)._postrender(stage, shader)
 
+	def __del__(self):
+		glDeleteTextures([self.texid])
 		
 		
