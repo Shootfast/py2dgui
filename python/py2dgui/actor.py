@@ -54,6 +54,9 @@ class BaseActor(object):
 		self._rotation = Point()		
 		self._scale = Point(1,1,1)
 		
+		# Animatable alpha channel
+		self.alpha = 1.0
+		
 		# Matrix from model to camera (provided in _render)
 		self.matrixStack = None
 		self.modelCameraMatrix = None
