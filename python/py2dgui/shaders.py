@@ -86,12 +86,12 @@ void main()
 #version 330
 
 smooth in vec4 theColor;
-
+uniform float alpha;
 out vec4 outputColor;
 
 void main()
 {
-   outputColor = theColor;
+   outputColor = (theColor.xyz, alpha);
 }
 """
 
@@ -104,6 +104,8 @@ void main()
 		self.attrib_color              = glGetAttribLocation(self.program, 'color')
 		self.uniform_modelCamera       = glGetUniformLocation(self.program, 'modelToCameraMatrix')
 		self.uniform_projection        = glGetUniformLocation(self.program, 'projectionMatrix')
+		self.uniform_alpha             = glGetUniformLocation(self.program, 'alpha')
+		
 		
 		
 	def setup(self, actor):
@@ -128,6 +130,7 @@ void main()
 		# Apply uniforms
 		glUniformMatrix4fv(self.uniform_modelCamera, 1, GL_TRUE, actor.modelCamera_matrix)
 		glUniformMatrix4fv(self.uniform_projection, 1, GL_TRUE, actor.projection_matrix)
+		glUniform1f(self.uniform_alpha, actor.alpha)
 		
 		
 	def cleanup(self):
@@ -183,10 +186,13 @@ void main()
 in vec2 texpos;
 uniform sampler2D tex;
 uniform vec4 color;
+uniform float alpha;
+
+out vec4 outputColor;
  
 void main() 
 {
-  gl_FragColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * color;
+  outputColor = vec4(1, 1, 1, texture2D(tex, texpos).a) * vec4(color.xyz, alpha);
 }
 """
 	# Constructor
@@ -199,6 +205,7 @@ void main()
 		self.uniform_projection      = glGetUniformLocation(self.program, 'projectionMatrix')
 		self.uniform_color           = glGetUniformLocation(self.program, 'color')
 		self.uniform_tex             = glGetUniformLocation(self.program, 'tex')
+		self.uniform_alpha           = glGetUniformLocation(self.program, 'alpha')
 
 
 	def setup(self, actor):
@@ -219,7 +226,9 @@ void main()
 		glUniformMatrix4fv(self.uniform_modelCamera, 1, GL_TRUE, actor.modelCamera_matrix)
 		glUniformMatrix4fv(self.uniform_projection, 1, GL_TRUE, actor.projection_matrix)
 		glUniform4fv(self.uniform_color, 1, actor.color.data)
+		glUniform1f(self.uniform_alpha, actor.alpha)
 		glUniform1i(self.uniform_tex, 0)
+		
 		
 		# Bind to the correct texture
 		glBindTexture(GL_TEXTURE_2D, actor.atlas.texid)
