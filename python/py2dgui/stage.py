@@ -21,6 +21,7 @@ class Stage(object):
 		
 		# Actors on this stage
 		self.actors = []
+		self.animations = []
 		
 		self.shaders = {}
 		
@@ -32,7 +33,6 @@ class Stage(object):
 		self.startTime = time()
 		
 		self.fps = 0
-		self.frameFinishTime = 0
 		
 		self.setup()
 		self.resize(width, height)
@@ -67,12 +67,10 @@ class Stage(object):
 		raise Exception("Could not find shader that matched '%s'" % shadername)
 		
 		
-	def getElapsedTime(self):
-		'''
-		Get the total elapsed time since stage was constructed
-		'''
-		return time() - self.startTime
+	def addAnimation(self, animation):
+		self.animations.append(animation)
 		
+				
 	def resize(self, w, h):
 		'''
 		Set the size of the stage
@@ -120,6 +118,18 @@ class Stage(object):
 		'''
 		
 		before = time()
+		
+		# Do our animations
+		remove = []
+		for animation in self.animations:
+			if animation.complete == True:
+				remove.append(animation)
+				continue
+			animation.update(time())
+			
+		# Remove any finished animations
+		for i in remove:
+			self.animations.remove(i)
 							
 		# Render our actors
 		for actor in self.actors:
@@ -132,7 +142,4 @@ class Stage(object):
 			self.fps = 1.0 / framerate
 		else:
 			self.fps = 0 
-		
-		# Record frame finish time
-		self.frameFinishTime = after
 		
