@@ -2,6 +2,7 @@
 import sys
 sys.path.append('./python')
 from py2dgui import *
+from py2dgui import animations
 
 from OpenGL.GL import glClearColor, glClear, GL_COLOR_BUFFER_BIT, glViewport
 from OpenGL import GLUT	
@@ -58,7 +59,7 @@ if __name__ == "__main__":
 	stage = MyStage(width, height)
 	
 	GLUT.glutDisplayFunc(stage.render)
-	#GLUT.glutIdleFunc(stage.render)
+	GLUT.glutIdleFunc(stage.render)
 	GLUT.glutReshapeFunc(stage.resize)
 	
 	
@@ -79,9 +80,12 @@ if __name__ == "__main__":
 	#stage.add_actor(shape)
 	#stage.add_actor(shape2)
 
-	text = TextActor('./fonts/LiberationSerif-Regular.ttf', 48, text="Hello World!")
+	text = TextActor('./fonts/LiberationSerif-Regular.ttf', 48, text="Hello World!", color=Color(1))
 	text.translate(Point(10,100))
 	stage.addActor(text)
+	
+	f = animations.FadeIn(text, 1)
+	stage.addAnimation(f)
 	
 	#image = ImageActor('./Pictures/success_kid.png', alpha=.5)
 	#image.translate(Point(10,10))
